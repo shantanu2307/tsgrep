@@ -6,7 +6,6 @@ import { Command } from "commander";
 import fg from "fast-glob";
 
 // utils
-import { parse } from "./parser";
 import { scanForMatches } from "./matcher";
 
 // CLI definition
@@ -31,6 +30,8 @@ program
   .action(async (expression: string, directory: string, options: any) => {
     let query: any;
     try {
+      // @ts-ignore -- This will be created when npm run build is run. 
+      const { parse } = await import('./parser');
       query = parse(expression);
     } catch (err: any) {
       console.error("Failed to parse expression:", err.message);
