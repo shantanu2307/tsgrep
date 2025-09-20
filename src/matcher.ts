@@ -7,6 +7,11 @@ const KEYS_TO_EXCLUDE = ['child', 'type'];
 
 const PLUGINS: any = ['typescript', 'jsx', 'classProperties', 'decorators-legacy', 'objectRestSpread'];
 
+const PARSER_OPTIONS: ParserOptions = {
+  sourceType: 'module',
+  plugins: PLUGINS,
+};
+
 export interface QueryNode {
   type?: string;
   child?: QueryNode;
@@ -70,19 +75,11 @@ function matchChild(node: t.Node, query: QueryNode): boolean {
   return false;
 }
 
-export function chooseParser(filePath: string): ParserOptions {
-  return {
-    sourceType: 'module',
-    plugins: PLUGINS,
-  };
-}
-
 export function scanForMatches(filePath: string, query: QueryNode): string[] {
-  const parserOptions = chooseParser(filePath);
   const source = fs.readFileSync(filePath, 'utf-8');
 
   try {
-    const ast = parse(source, parserOptions);
+    const ast = parse(source, PARSER_OPTIONS);
     const matches: string[] = [];
 
     traverse(ast, {
