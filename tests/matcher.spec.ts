@@ -116,4 +116,36 @@ describe('scanForMatches', () => {
     expect(matches.length).toBe(1);
     removeTempFile(file);
   });
+
+  it('should match correct CallExpression in if block', () => {
+    const code = `
+     if(num>5){
+	      switch(num){
+          case 6:{
+      	      triggerAlert(); 
+            }
+            default:
+        }
+        trigger();
+      }
+      if(num<4){
+        triggerAlert();
+      }
+    `;
+    const file = writeTempFile(code);
+
+    const query: QueryNode = {
+      type: 'IfStatement',
+      child: {
+        type: 'CallExpression',
+        callee: {
+          name: 'triggerAlert',
+        },
+      },
+    };
+
+    const matches = scanForMatches(file, query);
+    expect(matches.length).toBe(2);
+    removeTempFile(file);
+  });
 });
