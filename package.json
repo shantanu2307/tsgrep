@@ -7,11 +7,13 @@
   "devDependencies": {
     "@types/babel__traverse": "^7.28.0",
     "@types/node": "^24.5.2",
+    "peggy": "^5.0.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   },
   "scripts": {
-    "build": "tsc"
+    "build-parser": "peggy -o src/parser.js --format es src/grammar.peggy", 
+    "build":"npm run build-parser && tsc"
   },
   "keywords": [],
   "author": "",
