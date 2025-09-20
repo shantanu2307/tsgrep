@@ -1,17 +1,11 @@
-import fs from "fs";
-import { parse, ParserOptions } from "@babel/parser";
-import traverse from "@babel/traverse";
-import * as t from "@babel/types";
+import fs from 'fs';
+import { parse, ParserOptions } from '@babel/parser';
+import traverse from '@babel/traverse';
+import * as t from '@babel/types';
 
-const KEYS_TO_EXCLUDE = ["child", "type"];
+const KEYS_TO_EXCLUDE = ['child', 'type'];
 
-const PLUGINS:any = [
-  "typescript",
-  "jsx",
-  "classProperties",
-  "decorators-legacy",
-  "objectRestSpread",
-];
+const PLUGINS: any = ['typescript', 'jsx', 'classProperties', 'decorators-legacy', 'objectRestSpread'];
 
 export interface QueryNode {
   type?: string;
@@ -20,7 +14,7 @@ export interface QueryNode {
 }
 
 function isNode(value: unknown): value is t.Node {
-  return typeof value === "object" && value !== null && "type" in value;
+  return typeof value === 'object' && value !== null && 'type' in value;
 }
 
 function matchNode(node: t.Node, query: QueryNode): boolean {
@@ -33,25 +27,19 @@ function matchNode(node: t.Node, query: QueryNode): boolean {
     let actual = (node as any)[key];
 
     if (Array.isArray(expected)) {
-      if (!Array.isArray(actual) || expected.length > actual.length)
-        return false;
+      if (!Array.isArray(actual) || expected.length > actual.length) return false;
       for (let i = 0; i < expected.length; i++) {
-        if (
-          !isNode(actual[i]) ||
-          !matchNode(actual[i], expected[i] as QueryNode)
-        )
-          return false;
+        if (!isNode(actual[i]) || !matchNode(actual[i], expected[i] as QueryNode)) return false;
       }
       continue;
     }
 
-    if (typeof expected === "object" && expected !== null) {
-      if (!isNode(actual) || !matchNode(actual, expected as QueryNode))
-        return false;
+    if (typeof expected === 'object' && expected !== null) {
+      if (!isNode(actual) || !matchNode(actual, expected as QueryNode)) return false;
       continue;
     }
 
-    if(typeof actual!== "string"){
+    if (typeof actual !== 'string') {
       actual = String(actual);
     }
 
@@ -66,14 +54,13 @@ function matchNode(node: t.Node, query: QueryNode): boolean {
 }
 
 function matchChild(node: t.Node, query: QueryNode): boolean {
-  if (!node || typeof node !== "object") return false;
+  if (!node || typeof node !== 'object') return false;
 
   for (const key of Object.keys(node)) {
     const value = (node as any)[key];
     if (Array.isArray(value)) {
       for (const v of value) {
-        if (isNode(v) && (matchNode(v, query) || matchChild(v, query)))
-          return true;
+        if (isNode(v) && (matchNode(v, query) || matchChild(v, query))) return true;
       }
     } else if (isNode(value)) {
       if (matchNode(value, query) || matchChild(value, query)) return true;
@@ -85,14 +72,14 @@ function matchChild(node: t.Node, query: QueryNode): boolean {
 
 export function chooseParser(filePath: string): ParserOptions {
   return {
-    sourceType: "module",
+    sourceType: 'module',
     plugins: PLUGINS,
   };
 }
 
 export function scanForMatches(filePath: string, query: QueryNode): string[] {
   const parserOptions = chooseParser(filePath);
-  const source = fs.readFileSync(filePath, "utf-8");
+  const source = fs.readFileSync(filePath, 'utf-8');
 
   try {
     const ast = parse(source, parserOptions);

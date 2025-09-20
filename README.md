@@ -4,9 +4,9 @@
 
 ## 🚀 Features
 
-* **AST-Based Search**: Utilizes TypeScript's AST for accurate code structure analysis.
-* **Precise Matching**: Supports searching for specific nodes, functions, variables, and more.
-* **Flexible Querying**: Allows for complex queries to match various code patterns.
+- **AST-Based Search**: Utilizes TypeScript's AST for accurate code structure analysis.
+- **Precise Matching**: Supports searching for specific nodes, functions, variables, and more.
+- **Flexible Querying**: Allows for complex queries to match various code patterns.
 
 ## 📦 Installation
 
@@ -39,6 +39,7 @@ tsgrep "FunctionDeclaration[id=Identifier[name=\"myFunction\"]]"
 ### Search in Specific Files
 
 Limit your search to specific files or directories:
+
 ```bash
 tsgrep "FunctionDeclaration[id=Identifier[name=\"myFunction\"]]" src/**/*.ts
 ```
@@ -46,6 +47,7 @@ tsgrep "FunctionDeclaration[id=Identifier[name=\"myFunction\"]]" src/**/*.ts
 ### Exclude Specific Files
 
 To exclude certain files from your search:
+
 ```bash
 tsgrep "FunctionDeclaration[id=Identifier[name=\"myFunction\"]]" src/**/*.ts --exclude 'src/test/**/*.ts'
 ```
@@ -53,21 +55,23 @@ tsgrep "FunctionDeclaration[id=Identifier[name=\"myFunction\"]]" src/**/*.ts --e
 ## 💡 Use Cases
 
 ### 1. Refactoring
+
 Identify all instances of a function or variable to safely rename or modify them.
 
-
 ### 2. Code Audits
+
 Search for specific patterns, such as deprecated API usage or security vulnerabilities.
 
-
 ### 3. Codebase Exploration
+
 Quickly locate function definitions, variable declarations, or class implementations to understand code structure.
 
 ## Todo
+
 - [ ] Add support for Regex-based queries.
 - [ ] Improve performance for large codebases.
 - [ ] Add test cases and examples.
 
-
 ## Contributing
+
 Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.

@@ -11,14 +11,19 @@
     "@types/babel__traverse": "^7.28.0",
     "@types/node": "^24.5.2",
     "peggy": "^5.0.6",
+    "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   },
   "scripts": {
-    "build-parser": "peggy -o src/parser.js --format es src/grammar.peggy", 
-    "build":"npm run build-parser && tsc"
+    "build-parser": "peggy -o src/parser.js --format es src/grammar.peggy",
+    "build": "npm run build-parser && tsc",
+    "format": "prettier --write ."
   },
-  "keywords": ["AST Parsing", "Search"],
+  "keywords": [
+    "AST Parsing",
+    "Search"
+  ],
   "author": "Shantanu Goyal<shantanugoyal23@gmail.com>",
   "license": "ISC",
   "description": "CLI tool that leverages TypeScript's Abstract Syntax Tree (AST) to perform precise and efficient searches",
