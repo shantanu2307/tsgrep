@@ -22,7 +22,7 @@ function matchNode(node: t.Node, query: QueryNode): boolean {
     if (KEYS_TO_EXCLUDE.includes(key)) continue;
 
     const expected = query[key];
-    const actual = (node as any)[key];
+    let actual = (node as any)[key];
 
     if (Array.isArray(expected)) {
       if (!Array.isArray(actual) || expected.length > actual.length)
@@ -41,6 +41,12 @@ function matchNode(node: t.Node, query: QueryNode): boolean {
       if (!isNode(actual) || !matchNode(actual, expected as QueryNode))
         return false;
       continue;
+    }
+
+    // convert actual to string 
+
+    if(typeof actual!== "string"){
+      actual = String(actual);
     }
 
     if (actual !== expected) return false;
