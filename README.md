@@ -68,9 +68,7 @@ Quickly locate function definitions, variable declarations, or class implementat
 
 ## Todo
 
-- [ ] Add support for Regex-based queries.
 - [ ] Improve performance for large codebases.
-- [ ] Add test cases and examples.
 
 ## Contributing
 
