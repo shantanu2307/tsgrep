@@ -1,6 +1,6 @@
 {
   "name": "tsgrep",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "bin": {
     "tsgrep": "dist/cli.js"
   },
