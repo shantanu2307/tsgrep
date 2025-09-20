@@ -16,6 +16,16 @@ To install tsgrep globally using Yarn:
 npm i -g tsgrep
 ```
 
+To install locally in your project:
+
+```bash
+git clone https://github.com/shantanu2307/tsgrep.git
+cd tsgrep
+npm install
+npm run build
+npm link
+```
+
 ## 🧪 Usage
 
 ### Search with AST Queries
