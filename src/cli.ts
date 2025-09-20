@@ -16,7 +16,7 @@ program
   .name("ts-grep")
   .description("Search TypeScript/JavaScript code with AST Expressions")
   .argument("<expression>", "query expression")
-  .argument("<directory>", "directory to search")
+  .argument("[directory]", "directory to search", ".")
   .option(
     "-i, --ignore <patterns...>",
     "glob patterns to ignore (e.g. '**/node_modules/**' '**/dist/**')",
