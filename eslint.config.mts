@@ -21,6 +21,6 @@ export default defineConfig([
     },
   },
   {
-    ignores: ['node_modules/', 'dist/', './src/parser.js'],
+    ignores: ['node_modules/', 'dist/', './src/parser.js', 'coverage/'],
   },
 ]);
