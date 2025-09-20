@@ -7,6 +7,7 @@ import fg from 'fast-glob';
 
 // utils
 import { scanForMatches } from './matcher';
+import { parseRegexInQuery } from './utils';
 
 // CLI definition
 const program = new Command();
@@ -27,6 +28,7 @@ program
       // @ts-ignore -- This will be created when npm run build is run.
       const { parse } = await import('./parser');
       query = parse(expression);
+      query = parseRegexInQuery(query);
     } catch (err: any) {
       console.error('Failed to parse expression:', err.message);
       process.exit(1);

@@ -31,6 +31,10 @@ function matchNode(node: t.Node, query: QueryNode): boolean {
     const expected = query[key];
     let actual = (node as any)[key];
 
+    if (expected instanceof RegExp) {
+      return typeof actual === 'string' && expected.test(actual);
+    }
+
     if (Array.isArray(expected)) {
       if (!Array.isArray(actual) || expected.length > actual.length) return false;
       for (let i = 0; i < expected.length; i++) {
