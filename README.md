@@ -13,7 +13,7 @@
 To install tsgrep globally using Yarn:
 
 ```bash
-yarn global add tsgrep
+npm i -g tsgrep
 ```
 
 ## 🧪 Usage
