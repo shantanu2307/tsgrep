@@ -28,6 +28,7 @@
   "scripts": {
     "build-parser": "peggy -o src/parser.js --format es src/grammar.peggy",
     "build": "npm run build-parser && tsc",
+    "build:clean":"rm -rf .tsbuildinfo && rm -rf dist && npm run build", 
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",

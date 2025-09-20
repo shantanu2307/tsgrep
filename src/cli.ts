@@ -10,6 +10,7 @@ const program = new Command();
 program
   .name('ts-grep')
   .description('Search TypeScript/JavaScript code with AST Expressions')
+  .version('1.0.0', '-v, --version', 'output the current version')
   .argument('<expression>', 'query expression')
   .argument('[directory]', 'directory to search', '.')
   .option('-i, --ignore <patterns...>', "glob patterns to ignore (e.g. '**/node_modules/**' '**/dist/**')", [])
