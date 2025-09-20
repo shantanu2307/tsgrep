@@ -5,6 +5,14 @@ import * as t from "@babel/types";
 
 const KEYS_TO_EXCLUDE = ["child", "type"];
 
+const PLUGINS:any = [
+  "typescript",
+  "jsx",
+  "classProperties",
+  "decorators-legacy",
+  "objectRestSpread",
+];
+
 export interface QueryNode {
   type?: string;
   child?: QueryNode;
@@ -43,8 +51,6 @@ function matchNode(node: t.Node, query: QueryNode): boolean {
       continue;
     }
 
-    // convert actual to string 
-
     if(typeof actual!== "string"){
       actual = String(actual);
     }
@@ -78,33 +84,9 @@ function matchChild(node: t.Node, query: QueryNode): boolean {
 }
 
 export function chooseParser(filePath: string): ParserOptions {
-  if (filePath.endsWith(".css")) {
-    throw new Error("CSS parsing not implemented");
-  }
-
-  const plugins: any[] = [
-    "typescript",
-    "jsx",
-    "classProperties",
-    "decorators-legacy",
-    "objectRestSpread",
-  ];
-
-  if (filePath.endsWith(".tsx")) {
-    return {
-      sourceType: "module",
-      plugins: [...plugins, "typescript", "jsx"],
-    };
-  }
-  if (filePath.endsWith(".ts")) {
-    return {
-      sourceType: "module",
-      plugins: [...plugins, "typescript"],
-    };
-  }
   return {
     sourceType: "module",
-    plugins: [...plugins],
+    plugins: PLUGINS,
   };
 }
 
