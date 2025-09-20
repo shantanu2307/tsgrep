@@ -28,7 +28,7 @@ program
       // @ts-ignore -- This will be created when npm run build is run.
       const { parse } = await import('./parser');
       const composedParser = compose(parseRegexInQuery, parse);
-      query = composedParser(expression);
+      query = composedParser(expression.replace(/\s/g, ''));
     } catch (err: any) {
       console.error('Failed to parse expression:', err.message);
       process.exit(1);
