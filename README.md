@@ -7,6 +7,9 @@
 - **AST-Based Search**: Utilizes TypeScript's AST for accurate code structure analysis.
 - **Precise Matching**: Supports searching for specific nodes, functions, variables, and more.
 - **Flexible Querying**: Allows for complex queries to match various code patterns.
+- **Regular Expression Support**: Integrates regex for powerful pattern matching.
+- **File and Directory Filtering**: Search within specific files or directories, or exclude certain paths.
+- **Cross-Platform**: Works on Windows, macOS, and Linux.
 
 ## 📦 Installation
 
