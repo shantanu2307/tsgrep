@@ -31,6 +31,14 @@ npm link
 
 ## 🧪 Usage
 
+### Using it as an API 
+
+```javascript
+import { search } from 'tsgrep/dist';
+// use search(<Expression>, <Directory>, <Options>) to get matches
+```
+
+
 ### Search with AST Queries
 
 For more advanced searches, use AST queries to match specific patterns:
@@ -54,20 +62,6 @@ To exclude certain files from your search:
 ```bash
 tsgrep "FunctionDeclaration[id=Identifier[name=\"myFunction\"]]" src/**/*.ts --exclude 'src/test/**/*.ts'
 ```
-
-## 💡 Use Cases
-
-### 1. Refactoring
-
-Identify all instances of a function or variable to safely rename or modify them.
-
-### 2. Code Audits
-
-Search for specific patterns, such as deprecated API usage or security vulnerabilities.
-
-### 3. Codebase Exploration
-
-Quickly locate function definitions, variable declarations, or class implementations to understand code structure.
 
 ## Todo
 
