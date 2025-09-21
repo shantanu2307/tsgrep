@@ -31,7 +31,7 @@ program
       } else {
         console.log(`\n📋 Found ${matches.length} match(es):`);
         console.log('─'.repeat(50));
-        matches.forEach(m => console.log(m));
+        matches.forEach(m => console.log(`${m.file}:${m.line}`));
         console.log('─'.repeat(50));
       }
     } catch (err: any) {

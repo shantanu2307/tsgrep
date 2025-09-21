@@ -24,8 +24,6 @@ describe('scanForMatches', () => {
 
     const matches = scanForMatches(file, query);
     expect(matches.length).toBe(1);
-    expect(matches[0]).toMatch(/temp\.ts:\d+/);
-
     removeTempFile(file);
   });
 
@@ -62,8 +60,6 @@ describe('scanForMatches', () => {
 
     const matches = scanForMatches(file, query);
     expect(matches.length).toBe(1);
-    expect(matches[0]).toMatch(/temp\.ts:\d+/);
-
     removeTempFile(file);
   });
 

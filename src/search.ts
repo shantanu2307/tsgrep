@@ -5,7 +5,7 @@ import fs from 'fs';
 import fg from 'fast-glob';
 import ignore from 'ignore';
 
-import { scanForMatches } from './matcher';
+import { scanForMatches, SearchResult } from './matcher';
 import { compose, parseRegexInQuery } from './utils';
 
 export interface SearchOptions {
@@ -18,7 +18,7 @@ export async function search(
   expression: string,
   directory: string = '.',
   options: SearchOptions = {}
-): Promise<string[]> {
+): Promise<SearchResult[]> {
   let query: any;
   try {
     // @ts-ignore -- parser built at runtime
@@ -56,7 +56,7 @@ export async function search(
   }
 
   // Run matcher
-  const matches = new Set<string>();
+  const matches = new Set<SearchResult>();
   files.forEach(file => {
     const result = scanForMatches(file, query);
     result.forEach(m => matches.add(m));
@@ -64,8 +64,10 @@ export async function search(
 
   // Return sorted results
   return Array.from(matches).sort((a, b) => {
-    const [fileA, lineA] = a.split(':');
-    const [fileB, lineB] = b.split(':');
-    return fileA.localeCompare(fileB) || parseInt(lineA) - parseInt(lineB);
+    const fileA = a.file;
+    const fileB = b.file;
+    const lineA = a.line;
+    const lineB = b.line;
+    return fileA.localeCompare(fileB) || lineA - lineB;
   });
 }

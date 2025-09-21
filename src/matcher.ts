@@ -18,6 +18,11 @@ export interface QueryNode {
   [key: string]: unknown;
 }
 
+export interface SearchResult {
+  file: string;
+  line: number;
+}
+
 function isNode(value: unknown): value is t.Node {
   return typeof value === 'object' && value !== null && 'type' in value;
 }
@@ -79,18 +84,21 @@ function matchChild(node: t.Node, query: QueryNode): boolean {
   return false;
 }
 
-export function scanForMatches(filePath: string, query: QueryNode): string[] {
+export function scanForMatches(filePath: string, query: QueryNode): SearchResult[] {
   const source = fs.readFileSync(filePath, 'utf-8');
 
   try {
     const ast = parse(source, PARSER_OPTIONS);
-    const matches: string[] = [];
+    const matches: SearchResult[] = [];
 
     traverse(ast, {
       enter(path) {
         if (matchNode(path.node, query)) {
           const line = path.node.loc?.start?.line ?? 0;
-          matches.push(`${filePath}:${line}`);
+          matches.push({
+            file: filePath,
+            line,
+          });
         }
       },
     });
