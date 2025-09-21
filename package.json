@@ -1,6 +1,6 @@
 {
   "name": "tsgrep",
-  "version": "1.8.0",
+  "version": "2.0.1",
   "bin": {
     "tsgrep": "dist/cli.js"
   },
@@ -27,8 +27,8 @@
   },
   "scripts": {
     "build-parser": "peggy -o src/parser.js --format es src/grammar.peggy",
+    "prebuild":"rm -rf .tsbuildinfo && rm -rf dist", 
     "build": "npm run build-parser && tsc",
-    "build:clean":"rm -rf .tsbuildinfo && rm -rf dist && npm run build", 
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
