@@ -18,7 +18,7 @@ program
   .option('--no-gitignore', 'do not respect .gitignore rules')
   .action(async (expression: string, directory: string, options: any) => {
     try {
-      const matches = await search(expression, directory, {
+      const matches = await search(expression, [directory], {
         ignore: options.ignore,
         ext: options.ext,
         gitignore: options.gitignore,
