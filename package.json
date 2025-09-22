@@ -47,7 +47,6 @@
     "@babel/traverse": "^7.28.4",
     "@babel/types": "^7.28.4",
     "commander": "^14.0.1",
-    "fast-glob": "^3.3.3",
-    "ignore": "^7.0.5"
+    "fast-glob": "^3.3.3"
   }
 }

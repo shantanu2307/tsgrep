@@ -3,7 +3,6 @@
 import path from 'path';
 import fs from 'fs';
 import fg from 'fast-glob';
-import ignore from 'ignore';
 
 import { scanForMatches, SearchResult } from './matcher';
 import { compose, parseRegexInQuery } from './utils';
@@ -33,29 +32,31 @@ export async function search(
 
   const allFiles = new Set<string>();
 
-  for (const directory of directories) {
+  const tasks = directories.map(async directory => {
     const pattern = exts.map(ext => path.join(directory, `**/*${ext}`));
-    // Load .gitignore rules (default: true)
-    let ig: ReturnType<typeof ignore> | null = null;
+
+    let gitignoreRules: string[] = [];
     if (options.gitignore) {
       const gitignorePath = path.join(directory, '.gitignore');
       if (fs.existsSync(gitignorePath)) {
         const gitignoreContent = fs.readFileSync(gitignorePath, 'utf8');
-        ig = ignore().add(gitignoreContent.split('\n'));
+        gitignoreRules.push(...gitignoreContent.split('\n').filter(Boolean));
       }
     }
+
     let files = await fg(pattern, {
-      ignore: options.ignore ?? [],
+      ignore: [...(options.ignore ?? []), ...gitignoreRules],
       onlyFiles: true,
       absolute: true,
       dot: false,
     });
-    // Filter using .gitignore
-    if (ig) {
-      files = files.filter(file => !ig!.ignores(path.relative(directory, file)));
-    }
-    files.forEach(file => allFiles.add(file));
-  }
+
+    return files;
+  });
+
+  const results = await Promise.all(tasks);
+  results.flat().forEach(file => allFiles.add(file));
+
   // Run matcher
   const matches = new Set<SearchResult>();
   Array.from(allFiles).forEach(file => {

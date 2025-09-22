@@ -31,13 +31,12 @@ npm link
 
 ## 🧪 Usage
 
-### Using it as an API 
+### Using it as an API
 
 ```javascript
 import { search } from 'tsgrep/dist';
 // use search(<Expression>, <Directory>, <Options>) to get matches
 ```
-
 
 ### Search with AST Queries
 
