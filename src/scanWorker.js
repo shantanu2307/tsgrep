@@ -3,12 +3,11 @@ import { scanForMatches } from './matcher';
 
 const { files, query } = workerData ?? {};
 
-async function main() {
+const main = () => {
   try {
     const allResults = [];
-
     for (const file of files) {
-      const result = await scanForMatches(file, query);
+      const result = scanForMatches(file, query);
       allResults.push(...result);
     }
     parentPort?.postMessage({ results: allResults });
@@ -16,6 +15,6 @@ async function main() {
     console.log(err);
     parentPort?.postMessage({ results: [] });
   }
-}
+};
 
 main();

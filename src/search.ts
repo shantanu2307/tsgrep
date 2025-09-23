@@ -100,7 +100,24 @@ export async function search(
 
   const matches = await getMatches(allFiles, query);
 
-  return matches.sort((a, b) => {
+  const cache: Record<string, Set<number>> = {};
+  matches.forEach(match => {
+    cache[match.file] ??= new Set<number>();
+    cache[match.file].add(match.line);
+  });
+
+  const dedupedMatches: SearchResult[] = [];
+
+  Object.entries(cache).forEach(([file, lines]) => {
+    lines.forEach(line => {
+      dedupedMatches.push({
+        file,
+        line,
+      });
+    });
+  });
+
+  return dedupedMatches.sort((a, b) => {
     const fileA = a.file;
     const fileB = b.file;
     const lineA = a.line;
