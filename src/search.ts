@@ -3,8 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import fg from 'fast-glob';
 import os from 'os';
-import { pathToFileURL } from 'url';
-// worker class
+
+// worker
 import { Worker } from 'worker_threads';
 
 // utils
@@ -19,7 +19,7 @@ export interface SearchOptions {
   gitignore?: boolean; // default true
 }
 
-const workerPath = path.resolve(__dirname, './scanWorker.js');
+const WORKER_PATH = path.join(__dirname, 'scan.worker.js');
 
 const getMatches = async (files: Set<string>, query: QueryNode): Promise<SearchResult[]> => {
   const maxWorkers = Math.max(1, os.cpus().length - 1);
@@ -36,7 +36,7 @@ const getMatches = async (files: Set<string>, query: QueryNode): Promise<SearchR
 
   const workerPromises = batches.map(batch => {
     return new Promise<void>((resolve, reject) => {
-      const worker = new Worker(new URL(pathToFileURL(workerPath)), { workerData: { files: batch, query } });
+      const worker = new Worker(WORKER_PATH, { workerData: { files: batch, query } });
 
       worker.on('message', ({ results }) => {
         results.forEach((m: SearchResult) => matches.add(m));
