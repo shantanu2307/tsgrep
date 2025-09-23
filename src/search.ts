@@ -76,7 +76,7 @@ export async function search(
   const tasks = directories.map(async directory => {
     const pattern = exts.map(ext => path.join(directory, `**/*${ext}`));
 
-    let gitignoreRules: string[] = [];
+    const gitignoreRules: string[] = [];
     if (options.gitignore) {
       const gitignorePath = path.join(directory, '.gitignore');
       if (fs.existsSync(gitignorePath)) {
@@ -85,7 +85,7 @@ export async function search(
       }
     }
 
-    let files = await fg(pattern, {
+    const files = await fg(pattern, {
       ignore: [...(options.ignore ?? []), ...gitignoreRules],
       onlyFiles: true,
       absolute: true,

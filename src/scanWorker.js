@@ -13,6 +13,7 @@ async function main() {
     }
     parentPort?.postMessage({ results: allResults });
   } catch (err) {
+    console.log(err);
     parentPort?.postMessage({ results: [] });
   }
 }
