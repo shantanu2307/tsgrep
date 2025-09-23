@@ -19,7 +19,7 @@ export interface SearchOptions {
   gitignore?: boolean; // default true
 }
 
-const workerPath = path.resolve(__dirname, './scanWorker.js');
+const workerPath = require.resolve('./scanWorker.js');
 
 const getMatches = async (files: Set<string>, query: QueryNode): Promise<SearchResult[]> => {
   const maxWorkers = Math.max(1, os.cpus().length - 1);
