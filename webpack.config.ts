@@ -4,8 +4,9 @@ export default {
   entry: './src/index.ts',
   target: 'node',
   output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].js', // main bundle name = entry name
+    chunkFilename: '[name].chunk.js', // dynamically imported chunks
+    path: path.resolve(process.cwd(), './dist'),
     clean: true,
   },
   resolve: {
@@ -17,10 +18,6 @@ export default {
         test: /\.ts$/,
         use: 'ts-loader',
         exclude: /node_modules/,
-      },
-      {
-        test: /\.worker\.ts$/,
-        use: { loader: 'worker-loader', options: { inline: 'no-fallback' } },
       },
     ],
   },

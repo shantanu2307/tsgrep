@@ -1,7 +1,7 @@
 {
   "name": "tsgrep",
   "version": "3.6.0",
-  "main": "dist/bundle.js",
+  "main": "dist/index.js",
   "files": [
     "dist"
   ],
@@ -30,7 +30,7 @@
   "scripts": {
     "build-parser": "peggy -o src/parser.js --format es src/grammar.peggy",
     "prebuild": "rm -rf .tsbuildinfo && rm -rf dist",
-    "build": "npm run build-parser && webpack",
+    "build": "npm run build-parser && webpack --mode=production",
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",

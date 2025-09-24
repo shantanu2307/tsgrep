@@ -9,6 +9,7 @@ import { Worker } from 'worker_threads';
 
 // utils
 import { compose, parseRegexInQuery } from './utils';
+import { parse } from './parser';
 
 // types
 import type { QueryNode, SearchResult } from './matcher';
@@ -18,8 +19,6 @@ export interface SearchOptions {
   ext?: string[];
   gitignore?: boolean; // default true
 }
-
-const WORKER_PATH = path.join(__dirname, 'scan.worker.js');
 
 const getMatches = async (files: Set<string>, query: QueryNode): Promise<SearchResult[]> => {
   const maxWorkers = Math.max(1, os.cpus().length - 1);
@@ -36,7 +35,9 @@ const getMatches = async (files: Set<string>, query: QueryNode): Promise<SearchR
 
   const workerPromises = batches.map(batch => {
     return new Promise<void>((resolve, reject) => {
-      const worker = new Worker(WORKER_PATH, { workerData: { files: batch, query } });
+      const worker = new Worker(/* webpackChunkName: "scan-worker" */ new URL('./scan.worker', import.meta.url), {
+        workerData: { files: batch, query },
+      });
 
       worker.on('message', ({ results }) => {
         results.forEach((m: SearchResult) => matches.add(m));
@@ -61,8 +62,6 @@ export async function search(
 ): Promise<SearchResult[]> {
   let query: any;
   try {
-    // @ts-ignore -- parser built at runtime
-    const { parse } = await import('./parser');
     const composedParser = compose(parseRegexInQuery, parse);
     query = composedParser(expression.replace(/\s/g, ''));
   } catch (err: any) {

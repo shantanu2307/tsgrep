@@ -1,3 +1,5 @@
+import { parse } from '../src/parser';
+
 export const TEST_CASES = [
   // A simple selector for a node type
   {
@@ -137,7 +139,6 @@ export const TEST_CASES = [
 describe('parser.js', () => {
   TEST_CASES.map(({ input, expectedOutput }) =>
     it(`should create correct query for input:${input}`, async () => {
-      const { parse } = await import('../src/parser');
       const output = parse(input.replace(/\s/g, ''));
       expect(output).toEqual(expectedOutput);
     })
