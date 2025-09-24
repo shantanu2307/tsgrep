@@ -4,12 +4,12 @@
   "files": [
     "dist"
   ],
-  "main": "dist/main.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/main.js",
-      "require": "./dist/main.js",
+      "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
