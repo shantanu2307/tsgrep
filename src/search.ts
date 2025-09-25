@@ -35,7 +35,8 @@ const getMatches = async (files: Set<string>, query: QueryNode): Promise<SearchR
 
   const workerPromises = batches.map(batch => {
     return new Promise<void>((resolve, reject) => {
-      const worker = new Worker(/* webpackChunkName: "scan-worker" */ new URL('./scan.worker', import.meta.url), {
+      const workerPath = path.join(__dirname, 'scan.worker.js');
+      const worker = new Worker(/* webpackChunkName: "scan-worker" */ workerPath, {
         workerData: { files: batch, query },
       });
 

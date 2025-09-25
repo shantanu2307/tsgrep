@@ -4,7 +4,7 @@
   "files": [
     "dist"
   ],
-  "type": "module",
+  "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "devDependencies": {
@@ -30,7 +30,7 @@
     "worker-loader": "^3.0.8"
   },
   "scripts": {
-    "build-parser": "peggy -o src/parser.js --format es src/grammar.peggy",
+    "build-parser": "peggy -o src/parser.js src/grammar.peggy",
     "prebuild": "rm -rf .tsbuildinfo && rm -rf dist",
     "build": "npm run build-parser && webpack --mode=production",
     "format": "prettier --write .",

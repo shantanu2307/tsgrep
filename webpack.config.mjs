@@ -1,19 +1,22 @@
 import path from 'path';
 
 export default {
-  entry: './src/index.ts',
+  entry: {
+    index: './src/index.ts',
+    'scan.worker': './src/scan.worker.ts',
+  },
   target: 'node',
   output: {
-    filename: 'index.js',
+    filename: '[name].js',
     // eslint-disable-next-line no-undef
     path: path.resolve(process.cwd(), './dist'),
     clean: true,
     library: {
-      type: 'module',
+      type: 'commonjs2',
     },
   },
   experiments: {
-    outputModule: true,
+    outputModule: false,
     topLevelAwait: true,
   },
   resolve: {
@@ -25,6 +28,10 @@ export default {
         test: /\.ts$/,
         use: 'ts-loader',
         exclude: /node_modules/,
+      },
+      {
+        test: /\.worker\.js$/,
+        use: { loader: 'worker-loader' },
       },
     ],
   },
