@@ -3,6 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import fg from 'fast-glob';
 import os from 'os';
+import ignore from 'ignore';
+import _uniqBy from 'lodash/uniqBy';
 
 // worker
 import { Worker } from 'worker_threads';
@@ -75,48 +77,51 @@ export async function search(
 
   const tasks = directories.map(async directory => {
     const pattern = exts.map(ext => path.join(directory, `**/*${ext}`));
+    const ig = ignore();
 
-    const gitignoreRules: string[] = [];
     if (options.gitignore) {
       const gitignorePath = path.join(directory, '.gitignore');
       if (fs.existsSync(gitignorePath)) {
         const gitignoreContent = fs.readFileSync(gitignorePath, 'utf8');
-        gitignoreRules.push(...gitignoreContent.split('\n').filter(Boolean));
+        const gitignorePatterns = gitignoreContent
+          .split('\n')
+          .filter(line => {
+            const trimmed = line.trim();
+            return trimmed && !trimmed.startsWith('#');
+          })
+          .map(pattern => {
+            if (pattern.startsWith('!')) {
+              return '!' + pattern.slice(1).trim();
+            }
+            return pattern.trim();
+          });
+
+        ig.add(gitignorePatterns);
       }
     }
 
     const files = await fg(pattern, {
-      ignore: [...(options.ignore ?? []), ...gitignoreRules],
+      ignore: options.ignore ?? [],
       onlyFiles: true,
       absolute: true,
       dot: false,
     });
 
-    return files;
+    const finalSetOfFiles = files.filter(file => {
+      const relativePath = path.relative(directory, file);
+      // For root-level patterns, also check the filename alone
+      const fileName = path.basename(file);
+      return !ig.ignores(relativePath) && !ig.ignores(fileName);
+    });
+
+    return finalSetOfFiles;
   });
 
   const results = await Promise.all(tasks);
   results.flat().forEach(file => allFiles.add(file));
 
   const matches = await getMatches(allFiles, query);
-
-  const cache: Record<string, Set<number>> = {};
-  matches.forEach(match => {
-    cache[match.file] ??= new Set<number>();
-    cache[match.file].add(match.line);
-  });
-
-  const dedupedMatches: SearchResult[] = [];
-
-  Object.entries(cache).forEach(([file, lines]) => {
-    lines.forEach(line => {
-      dedupedMatches.push({
-        file,
-        line,
-      });
-    });
-  });
-
+  const dedupedMatches: SearchResult[] = _uniqBy(matches, match => `${match.file}:${match.line}`);
   return dedupedMatches.sort((a, b) => {
     const fileA = a.file;
     const fileB = b.file;

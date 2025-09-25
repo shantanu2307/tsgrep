@@ -21,6 +21,7 @@ export interface QueryNode {
 export interface SearchResult {
   file: string;
   line: number;
+  content: string;
 }
 
 function isNode(value: unknown): value is t.Node {
@@ -95,9 +96,13 @@ export function scanForMatches(filePath: string, query: QueryNode): SearchResult
       enter(path) {
         if (matchNode(path.node, query)) {
           const line = path.node.loc?.start?.line ?? 0;
+          const lines = source.split('\n');
+          const content = line < 1 || line > lines.length ? '' : lines[line - 1].trim();
+
           matches.push({
             file: filePath,
             line,
+            content,
           });
         }
       },
