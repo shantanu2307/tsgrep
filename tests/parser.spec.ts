@@ -1,4 +1,4 @@
-import { parse } from '../src/parser';
+import getQueryCache from '../src/queryCache';
 
 export const TEST_CASES = [
   // A simple selector for a node type
@@ -128,7 +128,7 @@ export const TEST_CASES = [
   },
   // Selector with whitespace
   {
-    input: '  CallExpression [ async = "true" ] ',
+    input: '     CallExpression [ async="true" ] ',
     expectedOutput: {
       type: 'CallExpression',
       async: 'true',
@@ -137,9 +137,10 @@ export const TEST_CASES = [
 ];
 
 describe('parser.js', () => {
+  const queryCache = getQueryCache();
   TEST_CASES.map(({ input, expectedOutput }) =>
     it(`should create correct query for input:${input}`, async () => {
-      const output = parse(input.replace(/\s/g, ''));
+      const output = queryCache.parseQuery(input);
       expect(output).toEqual(expectedOutput);
     })
   );

@@ -1,3 +1,13 @@
+export function getSingletonInstance<T>(factory: () => T): () => T {
+  let instance: T | null = null;
+  return () => {
+    if (!instance) {
+      instance = factory();
+    }
+    return instance;
+  };
+}
+
 // Compose multiple functions: compose(f, g, h)(x) => f(g(h(x)))
 export function compose<T>(...fns: Array<(arg: T) => T>): (arg: T) => T {
   return (arg: T): T => fns.reduceRight((acc, fn) => fn(acc), arg);

@@ -7,11 +7,10 @@ import ignore from 'ignore';
 import _uniqBy from 'lodash/uniqBy';
 
 // worker pool
-import { getWorkerPool } from './worker-pool';
+import getWorkerPool from './workerPool';
 
-// utils
-import { compose, parseRegexInQuery } from './utils';
-import { parse } from './parser';
+// query cache
+import getQueryCache from './queryCache';
 
 // types
 import type { QueryNode, SearchResult } from './matcher';
@@ -34,10 +33,9 @@ const getMatches = async (files: Set<string>, query: QueryNode): Promise<SearchR
     batches.push(fileList.slice(i, i + batchSize));
   }
 
+  const workerPool = getWorkerPool();
   // Use worker pool for processing
-  const workerPool = getWorkerPool(maxWorkers);
   const results = await workerPool.processBatches(batches, query);
-  workerPool.destroy();
   return results;
 };
 
@@ -46,13 +44,9 @@ export async function search(
   directories: string[] = ['.'],
   options: SearchOptions = {}
 ): Promise<SearchResult[]> {
-  let query: any;
-  try {
-    const composedParser = compose(parseRegexInQuery, parse);
-    query = composedParser(expression.replace(/\s/g, ''));
-  } catch (err: any) {
-    throw new Error(`Failed to parse expression: ${err.message}`);
-  }
+  const queryCache = getQueryCache();
+  const query = queryCache.parseQuery(expression);
+
   // Normalize extensions
   const exts = (options.ext ?? ['.ts', '.tsx', '.js', '.jsx']).map(ext => (ext.startsWith('.') ? ext : '.' + ext));
 

@@ -1,8 +1,13 @@
+// libs
 import path from 'path';
-import { Worker } from 'worker_threads';
 import os from 'os';
-import type { QueryNode, SearchResult } from './matcher';
+import { Worker } from 'worker_threads';
 
+// utils
+import { getSingletonInstance } from './utils';
+
+// types
+import type { QueryNode, SearchResult } from './matcher';
 interface WorkerTask {
   files: string[];
   query: QueryNode;
@@ -29,7 +34,7 @@ export class WorkerPool {
     this.initializeWorkers();
   }
 
-  private initializeWorkers(): void {
+  initializeWorkers(): void {
     for (let i = 0; i < this.maxWorkers; i++) {
       this.createWorker();
     }
@@ -136,19 +141,4 @@ export class WorkerPool {
   }
 }
 
-// Global worker pool instance
-let globalWorkerPool: WorkerPool | null = null;
-
-export function getWorkerPool(maxWorkers?: number): WorkerPool {
-  if (!globalWorkerPool) {
-    globalWorkerPool = new WorkerPool(maxWorkers);
-  }
-  return globalWorkerPool;
-}
-
-export function destroyWorkerPool(): void {
-  if (globalWorkerPool) {
-    globalWorkerPool.destroy();
-    globalWorkerPool = null;
-  }
-}
+export default getSingletonInstance(() => new WorkerPool());
