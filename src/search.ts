@@ -6,8 +6,8 @@ import os from 'os';
 import ignore from 'ignore';
 import _uniqBy from 'lodash/uniqBy';
 
-// worker
-import { Worker } from 'worker_threads';
+// worker pool
+import { getWorkerPool } from './worker-pool';
 
 // utils
 import { compose, parseRegexInQuery } from './utils';
@@ -24,10 +24,9 @@ export interface SearchOptions {
 
 const getMatches = async (files: Set<string>, query: QueryNode): Promise<SearchResult[]> => {
   const maxWorkers = Math.max(1, os.cpus().length - 1);
-  const matches: Set<SearchResult> = new Set<SearchResult>();
-
   const fileList = Array.from(files);
 
+  // Create batches for parallel processing
   const batchSize = Math.ceil(fileList.length / maxWorkers);
   const batches: string[][] = [];
 
@@ -35,27 +34,11 @@ const getMatches = async (files: Set<string>, query: QueryNode): Promise<SearchR
     batches.push(fileList.slice(i, i + batchSize));
   }
 
-  const workerPromises = batches.map(batch => {
-    return new Promise<void>((resolve, reject) => {
-      const workerPath = path.join(__dirname, 'scan.worker.js');
-      const worker = new Worker(/* webpackChunkName: "scan-worker" */ workerPath, {
-        workerData: { files: batch, query },
-      });
-
-      worker.on('message', ({ results }) => {
-        results.forEach((m: SearchResult) => matches.add(m));
-      });
-
-      worker.on('error', reject);
-
-      worker.on('exit', code => {
-        if (code !== 0) reject(new Error(`Worker stopped with exit code ${code}`));
-        else resolve();
-      });
-    });
-  });
-  await Promise.all(workerPromises);
-  return Array.from(matches);
+  // Use worker pool for processing
+  const workerPool = getWorkerPool(maxWorkers);
+  const results = await workerPool.processBatches(batches, query);
+  workerPool.destroy();
+  return results;
 };
 
 export async function search(

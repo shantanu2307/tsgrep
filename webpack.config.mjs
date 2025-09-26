@@ -1,4 +1,5 @@
 import path from 'path';
+import webpack from 'webpack';
 
 export default {
   entry: {
@@ -35,4 +36,9 @@ export default {
       },
     ],
   },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env.TEST': JSON.stringify(false),
+    }),
+  ],
 };
