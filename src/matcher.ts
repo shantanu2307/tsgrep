@@ -87,6 +87,7 @@ function matchChild(node: t.Node, query: QueryNode): boolean {
 
 export function scanForMatches(filePath: string, query: QueryNode): SearchResult[] {
   const source = fs.readFileSync(filePath, 'utf-8');
+  const lines = source.split('\n');
 
   try {
     const ast = parse(source, PARSER_OPTIONS);
@@ -96,7 +97,6 @@ export function scanForMatches(filePath: string, query: QueryNode): SearchResult
       enter(path) {
         if (matchNode(path.node, query)) {
           const line = path.node.loc?.start?.line ?? 0;
-          const lines = source.split('\n');
           const content = line < 1 || line > lines.length ? '' : lines[line - 1].trim();
 
           matches.push({
