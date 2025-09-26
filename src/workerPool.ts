@@ -26,6 +26,7 @@ export class WorkerPool {
   private taskQueue: WorkerTask[] = [];
   private maxWorkers: number;
   private workerPath: string;
+  private onBatchResults?: (results: SearchResult[]) => void;
 
   constructor(maxWorkers?: number) {
     this.maxWorkers = maxWorkers || Math.max(1, os.cpus().length - 1);
@@ -48,6 +49,11 @@ export class WorkerPool {
     };
 
     worker.on('message', ({ results }) => {
+      // Emit batch results as soon as they arrive so callers can observe progress
+      if (Array.isArray(results) && results.length > 0) {
+        this.onBatchResults?.(results);
+      }
+
       if (pooledWorker.task) {
         pooledWorker.task.resolve(results);
         pooledWorker.task = undefined;
@@ -122,6 +128,14 @@ export class WorkerPool {
     });
 
     return Array.from(matches);
+  }
+
+  /**
+   * Provide a callback that is invoked whenever a worker posts a batch of results.
+   * Pass undefined to remove the callback.
+   */
+  setOnBatchResults(callback?: (results: SearchResult[]) => void): void {
+    this.onBatchResults = callback;
   }
 
   destroy(): void {

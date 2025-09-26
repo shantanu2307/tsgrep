@@ -1,16 +1,15 @@
 // libs
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises';
 import fg from 'fast-glob';
 import os from 'os';
 import ignore from 'ignore';
 import _uniqBy from 'lodash/uniqBy';
 
-// worker pool
+// singleton classes
 import getWorkerPool from './workerPool';
-
-// query cache
 import getQueryCache from './queryCache';
+import getSearchManager from './searchManager';
 
 // types
 import type { QueryNode, SearchResult } from './matcher';
@@ -19,25 +18,133 @@ export interface SearchOptions {
   ignore?: string[];
   ext?: string[];
   gitignore?: boolean; // default true
+  batchSize?: number;
+  onProgress?: (results: SearchResult[]) => void;
+  interval?: number;
 }
 
-const getMatches = async (files: Set<string>, query: QueryNode): Promise<SearchResult[]> => {
-  const maxWorkers = Math.max(1, os.cpus().length - 1);
-  const fileList = Array.from(files);
+const DEFAULT_EXTS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
 
-  // Create batches for parallel processing
-  const batchSize = Math.ceil(fileList.length / maxWorkers);
-  const batches: string[][] = [];
+function normalizeExtensions(exts: string[]): string[] {
+  return exts.map(ext => (ext.startsWith('.') ? ext : `.${ext}`));
+}
 
-  for (let i = 0; i < fileList.length; i += batchSize) {
-    batches.push(fileList.slice(i, i + batchSize));
+function createIgnoreFilter(patterns: string[]): (file: string) => boolean {
+  const ig = ignore().add(patterns);
+  return (file: string) => !ig.ignores(file);
+}
+
+async function loadGitignore(directory: string): Promise<string[]> {
+  try {
+    const gitignorePath = path.join(directory, '.gitignore');
+    const content = await fs.readFile(gitignorePath, 'utf8');
+
+    return content
+      .split('\n')
+      .filter(line => {
+        const trimmed = line.trim();
+        return trimmed && !trimmed.startsWith('#');
+      })
+      .map(pattern => {
+        if (pattern.startsWith('!')) {
+          return '!' + pattern.slice(1).trim();
+        }
+        return pattern.trim();
+      });
+  } catch {
+    return [];
+  }
+}
+
+async function findFilesInDirectory(
+  directory: string,
+  exts: string[],
+  ignorePatterns: string[],
+  useGitignore: boolean
+): Promise<string[]> {
+  const patterns = exts.map(ext => path.join(directory, `**/*${ext}`));
+
+  const files = await fg(patterns, {
+    ignore: ignorePatterns,
+    onlyFiles: true,
+    absolute: true,
+    dot: false,
+    caseSensitiveMatch: false,
+    followSymbolicLinks: false,
+  });
+
+  // Additional filtering for gitignore patterns that need relative path checking
+  if (useGitignore) {
+    const gitignorePatterns = await loadGitignore(directory);
+    if (gitignorePatterns.length > 0) {
+      const filter = createIgnoreFilter(gitignorePatterns);
+      return files.filter(file => {
+        const relativePath = path.relative(directory, file);
+        const fileName = path.basename(file);
+        return filter(relativePath) && filter(fileName);
+      });
+    }
   }
 
+  return files;
+}
+
+function createFileBatches(files: string[], batchSize: number): string[][] {
+  const batches: string[][] = [];
+  for (let i = 0; i < files.length; i += batchSize) {
+    batches.push(files.slice(i, i + batchSize));
+  }
+  return batches;
+}
+
+function calculateOptimalBatchSize(fileCount: number, maxWorkers: number): number {
+  const minBatchSize = 10;
+  const maxBatchSize = 100;
+  const targetBatchesPerWorker = 4;
+
+  const idealBatchSize = Math.ceil(fileCount / (maxWorkers * targetBatchesPerWorker));
+  return Math.max(minBatchSize, Math.min(idealBatchSize, maxBatchSize));
+}
+
+async function getMatches(
+  files: string[],
+  query: QueryNode,
+  maxWorkers: number,
+  batchSizeOverride?: number
+): Promise<SearchResult[]> {
+  if (files.length === 0) {
+    return [];
+  }
+
+  let batchSize = calculateOptimalBatchSize(files.length, maxWorkers);
+  if (batchSizeOverride && batchSizeOverride > 0) {
+    batchSize = Math.floor(batchSizeOverride);
+  }
+  const batches = createFileBatches(files, batchSize);
   const workerPool = getWorkerPool();
-  // Use worker pool for processing
-  const results = await workerPool.processBatches(batches, query);
-  return results;
-};
+  const searchManager = getSearchManager();
+
+  try {
+    workerPool.setOnBatchResults((batch: SearchResult[]) => {
+      searchManager.addBatchResults(batch);
+    });
+    const results = await workerPool.processBatches(batches, query);
+    return results;
+  } finally {
+    workerPool.setOnBatchResults(undefined);
+  }
+}
+
+function dedupeAndSortResults(results: SearchResult[]): SearchResult[] {
+  const deduped = _uniqBy(results, (match: SearchResult) => `${match.file}:${match.line}`);
+  return deduped.sort((a, b) => {
+    const fileCompare = a.file.localeCompare(b.file);
+    if (fileCompare !== 0) return fileCompare;
+    const lineCompare = a.line - b.line;
+    if (lineCompare !== 0) return lineCompare;
+    return 0;
+  });
+}
 
 export async function search(
   expression: string,
@@ -47,63 +154,37 @@ export async function search(
   const queryCache = getQueryCache();
   const query = queryCache.parseQuery(expression);
 
-  // Normalize extensions
-  const exts = (options.ext ?? ['.ts', '.tsx', '.js', '.jsx']).map(ext => (ext.startsWith('.') ? ext : '.' + ext));
+  // Normalize options
+  const exts = normalizeExtensions(options.ext ?? DEFAULT_EXTS);
+  const ignorePatterns = options.ignore ?? [];
+  const useGitignore = options.gitignore !== false; // default true
+  const maxWorkers = Math.max(1, os.cpus().length - 1);
+  const progressInterval = options.interval ?? 5000; // 5 seconds
+  const searchManager = getSearchManager();
+  searchManager.setOnProgress(options.onProgress);
+  searchManager.setInterval(progressInterval);
 
-  const allFiles = new Set<string>();
-
-  const tasks = directories.map(async directory => {
-    const pattern = exts.map(ext => path.join(directory, `**/*${ext}`));
-    const ig = ignore();
-
-    if (options.gitignore) {
-      const gitignorePath = path.join(directory, '.gitignore');
-      if (fs.existsSync(gitignorePath)) {
-        const gitignoreContent = fs.readFileSync(gitignorePath, 'utf8');
-        const gitignorePatterns = gitignoreContent
-          .split('\n')
-          .filter(line => {
-            const trimmed = line.trim();
-            return trimmed && !trimmed.startsWith('#');
-          })
-          .map(pattern => {
-            if (pattern.startsWith('!')) {
-              return '!' + pattern.slice(1).trim();
-            }
-            return pattern.trim();
-          });
-
-        ig.add(gitignorePatterns);
-      }
+  try {
+    // Start progress reporting
+    searchManager.startProgressReporting();
+    // Find files in all directories
+    const filePromises = directories.map(directory =>
+      findFilesInDirectory(directory, exts, ignorePatterns, useGitignore)
+    );
+    const fileArrays = await Promise.all(filePromises);
+    const allFiles = Array.from(new Set(fileArrays.flat()));
+    if (allFiles.length === 0) {
+      return [];
     }
-
-    const files = await fg(pattern, {
-      ignore: options.ignore ?? [],
-      onlyFiles: true,
-      absolute: true,
-      dot: false,
-    });
-
-    const finalSetOfFiles = files.filter(file => {
-      const relativePath = path.relative(directory, file);
-      // For root-level patterns, also check the filename alone
-      const fileName = path.basename(file);
-      return !ig.ignores(relativePath) && !ig.ignores(fileName);
-    });
-
-    return finalSetOfFiles;
-  });
-
-  const results = await Promise.all(tasks);
-  results.flat().forEach(file => allFiles.add(file));
-
-  const matches = await getMatches(allFiles, query);
-  const dedupedMatches: SearchResult[] = _uniqBy(matches, match => `${match.file}:${match.line}`);
-  return dedupedMatches.sort((a, b) => {
-    const fileA = a.file;
-    const fileB = b.file;
-    const lineA = a.line;
-    const lineB = b.line;
-    return fileA.localeCompare(fileB) || lineA - lineB;
-  });
+    // Process files and get matches
+    const matches = await getMatches(allFiles, query, maxWorkers, options.batchSize);
+    // Final progress flush
+    searchManager.flushProgress();
+    return dedupeAndSortResults(matches);
+  } catch (error) {
+    searchManager.cancel();
+    throw error;
+  } finally {
+    searchManager.stopProgressReporting();
+  }
 }
