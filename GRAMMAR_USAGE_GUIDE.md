@@ -293,7 +293,7 @@ The grammar provides detailed error messages when parsing fails:
 
 1. **Missing quotes around strings:**
    ```
-   Identifier[name="foo"]  // Error: Expected "=" but "f" found
+   Identifier[name=foo]  // Error: Expected "=" but "f" found
    ```
 
 2. **Invalid attribute syntax:**
