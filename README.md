@@ -211,9 +211,7 @@ To exclude certain files from your search:
 tsgrep "FunctionDeclaration[id=Identifier[name=\"myFunction\"]]" src/**/*.ts --exclude 'src/test/**/*.ts'
 ```
 
-## Todo
-
-- [ ] Improve performance for large codebases.
+### Grammar Usage Guide [See Here](GRAMMAR_USAGE_GUIDE.md)
 
 ## Contributing
 
