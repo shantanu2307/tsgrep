@@ -5,9 +5,9 @@ import { getSingletonInstance } from './utils';
 import type { SearchResult } from './matcher';
 
 class SearchManager {
-  private progressAccumulator: SearchResult[] = [];
   private seenMatches = new Set<string>();
   private timer: NodeJS.Timeout | undefined;
+  progressAccumulator: SearchResult[] = [];
 
   constructor(
     private onProgress?: (results: SearchResult[]) => void,
@@ -16,15 +16,9 @@ class SearchManager {
 
   startProgressReporting() {
     if (!this.onProgress) return;
-
     this.timer = setInterval(() => {
       if (this.progressAccumulator.length > 0) {
-        try {
-          this.onProgress?.(this.progressAccumulator.slice());
-        } catch {
-          // ignore consumer errors
-        }
-        this.progressAccumulator.length = 0;
+        this.onProgress?.(this.progressAccumulator.slice());
       }
     }, this.interval);
   }
@@ -34,6 +28,8 @@ class SearchManager {
       clearInterval(this.timer);
       this.timer = undefined;
     }
+    this.progressAccumulator = [];
+    this.seenMatches.clear();
   }
 
   addBatchResults(batch: SearchResult[]) {
@@ -48,12 +44,7 @@ class SearchManager {
 
   flushProgress() {
     if (this.progressAccumulator.length > 0) {
-      try {
-        this.onProgress?.(this.progressAccumulator.slice());
-      } catch {
-        /* noop */
-      }
-      this.progressAccumulator.length = 0;
+      this.onProgress?.(this.progressAccumulator.slice());
     }
   }
 
@@ -63,12 +54,6 @@ class SearchManager {
 
   setInterval(interval: number | undefined = 10000) {
     this.interval = interval;
-  }
-
-  cancel() {
-    this.stopProgressReporting();
-    this.progressAccumulator.length = 0;
-    this.seenMatches.clear();
   }
 
   private getMatchKey(match: SearchResult): string {

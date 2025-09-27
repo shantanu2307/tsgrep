@@ -4,7 +4,6 @@ import fs from 'fs/promises';
 import fg from 'fast-glob';
 import os from 'os';
 import ignore from 'ignore';
-import _uniqBy from 'lodash/uniqBy';
 
 // singleton classes
 import getWorkerPool from './workerPool';
@@ -111,9 +110,9 @@ async function getMatches(
   query: QueryNode,
   maxWorkers: number,
   batchSizeOverride?: number
-): Promise<SearchResult[]> {
+): Promise<void> {
   if (files.length === 0) {
-    return [];
+    return;
   }
 
   let batchSize = calculateOptimalBatchSize(files.length, maxWorkers);
@@ -123,27 +122,15 @@ async function getMatches(
   const batches = createFileBatches(files, batchSize);
   const workerPool = getWorkerPool();
   const searchManager = getSearchManager();
-
   try {
     workerPool.setOnBatchResults((batch: SearchResult[]) => {
       searchManager.addBatchResults(batch);
     });
-    const results = await workerPool.processBatches(batches, query);
-    return results;
-  } finally {
+    await workerPool.processBatches(batches, query);
     workerPool.setOnBatchResults(undefined);
+  } catch (error) {
+    console.log(error);
   }
-}
-
-function dedupeAndSortResults(results: SearchResult[]): SearchResult[] {
-  const deduped = _uniqBy(results, (match: SearchResult) => `${match.file}:${match.line}`);
-  return deduped.sort((a, b) => {
-    const fileCompare = a.file.localeCompare(b.file);
-    if (fileCompare !== 0) return fileCompare;
-    const lineCompare = a.line - b.line;
-    if (lineCompare !== 0) return lineCompare;
-    return 0;
-  });
 }
 
 export async function search(
@@ -165,9 +152,7 @@ export async function search(
   searchManager.setInterval(progressInterval);
 
   try {
-    // Start progress reporting
     searchManager.startProgressReporting();
-    // Find files in all directories
     const filePromises = directories.map(directory =>
       findFilesInDirectory(directory, exts, ignorePatterns, useGitignore)
     );
@@ -176,14 +161,14 @@ export async function search(
     if (allFiles.length === 0) {
       return [];
     }
-    // Process files and get matches
-    const matches = await getMatches(allFiles, query, maxWorkers, options.batchSize);
-    // Final progress flush
+    await getMatches(allFiles, query, maxWorkers, options.batchSize);
     searchManager.flushProgress();
-    return dedupeAndSortResults(matches);
+    const results = searchManager.progressAccumulator.slice();
+    return results;
   } catch (error) {
-    searchManager.cancel();
-    throw error;
+    console.log(error);
+    const results = searchManager.progressAccumulator.slice();
+    return results;
   } finally {
     searchManager.stopProgressReporting();
   }
