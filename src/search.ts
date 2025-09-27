@@ -108,16 +108,18 @@ function calculateOptimalBatchSize(fileCount: number, maxWorkers: number): numbe
 async function getMatches(
   files: string[],
   query: QueryNode,
-  maxWorkers: number,
-  batchSizeOverride?: number
+  options: {
+    maxWorkers: number;
+    batchSize?: number;
+  }
 ): Promise<void> {
   if (files.length === 0) {
     return;
   }
 
-  let batchSize = calculateOptimalBatchSize(files.length, maxWorkers);
-  if (batchSizeOverride && batchSizeOverride > 0) {
-    batchSize = Math.floor(batchSizeOverride);
+  let batchSize = calculateOptimalBatchSize(files.length, options.maxWorkers);
+  if (options.batchSize && options.batchSize > 0) {
+    batchSize = Math.floor(options.batchSize);
   }
   const batches = createFileBatches(files, batchSize);
   const workerPool = getWorkerPool();
@@ -161,7 +163,10 @@ export async function search(
     if (allFiles.length === 0) {
       return [];
     }
-    await getMatches(allFiles, query, maxWorkers, options.batchSize);
+    await getMatches(allFiles, query, {
+      maxWorkers,
+      batchSize: options.batchSize,
+    });
     searchManager.flushProgress();
     const results = searchManager.progressAccumulator.slice();
     return results;
