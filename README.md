@@ -1,10 +1,10 @@
 # tsgrep
 
-**tsgrep** is a command-line tool that leverages TypeScript's Abstract Syntax Tree (AST) to perform precise and efficient searches within your codebase. Unlike traditional text-based search tools, tsgrep understands the structure of your code, enabling advanced queries that are both accurate and context-aware.
+**tsgrep** is a library that leverages JavaScript/TypeScript's Abstract Syntax Tree (AST) to perform precise and efficient searches within your codebase. Unlike traditional text-based search tools, tsgrep understands the structure of your code, enabling advanced queries that are both accurate and context-aware.
 
 ## 🚀 Features
 
-- **AST-Based Search**: Utilizes TypeScript's AST for accurate code structure analysis.
+- **AST-Based Search**: Utilizes JavaScript/TypeScript's AST for accurate code structure analysis.
 - **Precise Matching**: Supports searching for specific nodes, functions, variables, and more.
 - **Flexible Querying**: Allows for complex queries to match various code patterns.
 - **Regular Expression Support**: Integrates regex for powerful pattern matching.
