@@ -13,22 +13,11 @@
 
 ## 📦 Installation
 
-To install tsgrep globally using Yarn:
+To install tsgrep:
 
 ```bash
-npm i -g tsgrep
+npm i tsgrep
 ```
-
-To install locally in your project:
-
-```bash
-git clone https://github.com/shantanu2307/tsgrep.git
-cd tsgrep
-npm install
-npm run build
-npm link
-```
-
 ## 🏗️ Architecture
 
 ### High-level Architecture
@@ -183,7 +172,7 @@ classDiagram
 ### Using it as an API
 
 ```javascript
-import { search } from 'tsgrep/dist';
+import { search } from 'tsgrep';
 // use search(<Expression>, <Directory>, <Options>) to get matches
 ```
 
@@ -195,24 +184,4 @@ For more advanced searches, use AST queries to match specific patterns:
 tsgrep "FunctionDeclaration[id=Identifier[name=\"myFunction\"]]"
 ```
 
-### Search in Specific Files
-
-Limit your search to specific files or directories:
-
-```bash
-tsgrep "FunctionDeclaration[id=Identifier[name=\"myFunction\"]]" src/**/*.ts
-```
-
-### Exclude Specific Files
-
-To exclude certain files from your search:
-
-```bash
-tsgrep "FunctionDeclaration[id=Identifier[name=\"myFunction\"]]" src/**/*.ts --exclude 'src/test/**/*.ts'
-```
-
-### Grammar Usage Guide [See Here](GRAMMAR_USAGE_GUIDE.md)
-
-## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
+### [Grammar Usage Guide](GRAMMAR_USAGE_GUIDE.md)
