@@ -19,6 +19,7 @@ class SearchManager {
     this.timer = setInterval(() => {
       if (this.progressAccumulator.length > 0) {
         this.onProgress?.(this.progressAccumulator.slice());
+        this.progressAccumulator = [];
       }
     }, this.interval);
   }
@@ -45,6 +46,7 @@ class SearchManager {
   flushProgress() {
     if (this.progressAccumulator.length > 0) {
       this.onProgress?.(this.progressAccumulator.slice());
+      this.progressAccumulator = [];
     }
   }
 

@@ -16,9 +16,9 @@ import type { QueryNode, SearchResult } from './matcher';
 export interface SearchOptions {
   ignore?: string[];
   ext?: string[];
+  directories?: string[];
   gitignore?: boolean; // default true
   batchSize?: number;
-  onProgress?: (results: SearchResult[]) => void;
   interval?: number;
 }
 
@@ -137,20 +137,22 @@ async function getMatches(
 
 export async function search(
   expression: string,
-  directories: string[] = ['.'],
+  onSearchResultUpdate: (searchResultsChunk: SearchResult[]) => void,
   options: SearchOptions = {}
-): Promise<SearchResult[]> {
+): Promise<void> {
   const queryCache = getQueryCache();
   const query = queryCache.parseQuery(expression);
 
   // Normalize options
   const exts = normalizeExtensions(options.ext ?? DEFAULT_EXTS);
+  const directories = options.directories ?? ['.'];
   const ignorePatterns = options.ignore ?? [];
   const useGitignore = options.gitignore !== false; // default true
   const maxWorkers = Math.max(1, os.cpus().length - 1);
   const progressInterval = options.interval ?? 5000; // 5 seconds
   const searchManager = getSearchManager();
-  searchManager.setOnProgress(options.onProgress);
+
+  searchManager.setOnProgress(onSearchResultUpdate);
   searchManager.setInterval(progressInterval);
 
   try {
@@ -161,19 +163,15 @@ export async function search(
     const fileArrays = await Promise.all(filePromises);
     const allFiles = Array.from(new Set(fileArrays.flat()));
     if (allFiles.length === 0) {
-      return [];
+      return;
     }
     await getMatches(allFiles, query, {
       maxWorkers,
       batchSize: options.batchSize,
     });
     searchManager.flushProgress();
-    const results = searchManager.progressAccumulator.slice();
-    return results;
   } catch (error) {
     console.log(error);
-    const results = searchManager.progressAccumulator.slice();
-    return results;
   } finally {
     searchManager.stopProgressReporting();
   }
