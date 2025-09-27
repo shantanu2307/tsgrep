@@ -167,21 +167,9 @@ classDiagram
     SearchOptions --> SearchResult
 ```
 
-## 🧪 Usage
-
-### Using it as an API
+## [🧪 Usage](GRAMMAR_USAGE_GUIDE.md)
 
 ```javascript
 import { search } from 'tsgrep';
 // use search(<Expression>, <Directory>, <Options>) to get matches
 ```
-
-### Search with AST Queries
-
-For more advanced searches, use AST queries to match specific patterns:
-
-```bash
-tsgrep "FunctionDeclaration[id=Identifier[name=\"myFunction\"]]"
-```
-
-### [Grammar Usage Guide](GRAMMAR_USAGE_GUIDE.md)
