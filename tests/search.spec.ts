@@ -37,10 +37,9 @@ function makeFileContent(callsPerFile: number): string {
   return lines.join('\n');
 }
 
-// uncomment it for stress test
+// Uncomment this for stress testing
 describe.skip('search stress test', () => {
   jest.setTimeout(600000); // up to 10 minutes
-
   it('creates 50000 files with 100 CallExpression each and times search', async () => {
     const NUM_FILES = 50000;
     const CALLS_PER_FILE = 100;
@@ -50,26 +49,26 @@ describe.skip('search stress test', () => {
     // Recreate stress dir fresh
     rimrafDir(STRESS_DIR);
     ensureDir(STRESS_DIR);
-
     const content = makeFileContent(CALLS_PER_FILE);
-
     // Write files synchronously to avoid EMFILE issues
     for (let i = 0; i < NUM_FILES; i++) {
       const f = path.join(STRESS_DIR, `file_${i}.ts`);
       fs.writeFileSync(f, content, 'utf-8');
     }
-
     const expectedMatches = NUM_FILES * CALLS_PER_FILE;
-
     const start = Date.now();
-    const results = await search('CallExpression', [STRESS_DIR], { gitignore: true });
+    let matches = 0;
+    await search(
+      'CallExpression',
+      chunk => {
+        console.log(`Chunk Size: ${chunk.length}`);
+        matches += chunk.length;
+      },
+      { gitignore: true, directories: [STRESS_DIR], interval: 1000 }
+    );
     const durationMs = Date.now() - start;
-
-    console.log(`Found ${results.length} CallExpression in ${durationMs} ms across ${NUM_FILES} files.`);
-
-    expect(results.length).toBe(expectedMatches);
-
-    // Cleanup to not leave 50k files lying around
+    console.log(`Found ${matches} CallExpression in ${durationMs} ms across ${NUM_FILES} files.`);
+    expect(matches).toBe(expectedMatches);
     rimrafDir(STRESS_DIR);
   });
 });
