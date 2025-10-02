@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { search, cleanup } from '../dist';
+import { search, cleanup, SearchResult } from '../dist';
 
 const FIXTURES_DIR = path.join(__dirname, '__fixtures__');
 const STRESS_DIR = path.join(FIXTURES_DIR, 'stress');
@@ -49,6 +49,7 @@ interface TestRunnerOptions {
   interval?: number;
   getContent?: (callsPerFile: number) => string;
   getExpectedMatches?: (callsPerFile: number, numberOfFiles: number) => number;
+  debugChunk?: (chunk: SearchResult[]) => void;
 }
 
 const testRunner = async ({
@@ -58,6 +59,7 @@ const testRunner = async ({
   interval = 10,
   getContent = getDefaultContent,
   getExpectedMatches = getDefaultExpectedMatches,
+  debugChunk,
 }: TestRunnerOptions): Promise<void> => {
   ensureDir(FIXTURES_DIR);
   rimrafDir(STRESS_DIR);
@@ -76,6 +78,7 @@ const testRunner = async ({
   await search(
     expression,
     chunk => {
+      debugChunk?.(chunk);
       matches += chunk.length;
     },
     { gitignore: true, directories: [STRESS_DIR], interval }
@@ -84,7 +87,6 @@ const testRunner = async ({
   const durationMs = Date.now() - start;
   console.log(`Found ${matches} ${expression} in ${durationMs} ms across ${numberOfFiles} files.`);
   expect(matches).toBe(expectedMatches);
-
   rimrafDir(STRESS_DIR);
 };
 
@@ -117,6 +119,79 @@ const TEST_CASES = [
     callsPerFile: 50000,
     expression: 'CallExpression',
     skip: true,
+  },
+  {
+    name: 'Variable declaration stress test',
+    numberOfFiles: 50,
+    callsPerFile: 100,
+    expression: 'VariableDeclaration',
+    skip: false,
+    getContent: (callsPerFile: number) => {
+      const lines: string[] = [];
+      for (let i = 0; i < callsPerFile; i++) {
+        lines.push(`let x${i} = ${i};`);
+      }
+      return lines.join('\n');
+    },
+  },
+  {
+    name: 'Function declaration stress test',
+    numberOfFiles: 20,
+    callsPerFile: 200,
+    expression: 'FunctionDeclaration',
+    skip: false,
+    getContent: (callsPerFile: number) => {
+      const lines: string[] = [];
+      for (let i = 0; i < callsPerFile; i++) {
+        lines.push(`function fn${i}() { return ${i}; }`);
+      }
+      return lines.join('\n');
+    },
+  },
+  {
+    name: 'Arrow function stress test',
+    numberOfFiles: 10,
+    callsPerFile: 300,
+    expression: 'ArrowFunctionExpression',
+    skip: false,
+    getContent: (callsPerFile: number) => {
+      const lines: string[] = [];
+      for (let i = 0; i < callsPerFile; i++) {
+        lines.push(`const arrow${i} = () => ${i};`);
+      }
+      return lines.join('\n');
+    },
+  },
+  {
+    name: 'Import declaration stress test',
+    numberOfFiles: 5,
+    callsPerFile: 100,
+    expression: 'ImportDeclaration',
+    skip: false,
+    getContent: (callsPerFile: number) => {
+      const lines: string[] = [];
+      for (let i = 0; i < callsPerFile; i++) {
+        lines.push(`import mod${i} from './mod${i}.js';`);
+      }
+      return lines.join('\n');
+    },
+  },
+  {
+    name: 'Mixed nodes (calls + identifiers)',
+    numberOfFiles: 5,
+    callsPerFile: 20,
+    expression: 'Identifier',
+    skip: false,
+    getContent: (callsPerFile: number) => {
+      const lines: string[] = [];
+      for (let i = 0; i < callsPerFile; i++) {
+        lines.push(`function f${i}()\n{ const v${i} = ${i};\nreturn v${i}; };\nf${i}();`);
+      }
+      return lines.join('\n');
+    },
+    getExpectedMatches: (callsPerFile: number, numberOfFiles: number) => {
+      return numberOfFiles * callsPerFile * 4;
+    },
   },
 ];
 

@@ -1,3 +1,4 @@
+import { cleanup } from '../dist';
 import getQueryCache from '../src/queryCache';
 
 export const TEST_CASES = [
@@ -137,6 +138,7 @@ export const TEST_CASES = [
 ];
 
 describe('parser.js', () => {
+  afterAll(cleanup);
   const queryCache = getQueryCache();
   TEST_CASES.map(({ input, expectedOutput }) =>
     it(`should create correct query for input:${input}`, async () => {
