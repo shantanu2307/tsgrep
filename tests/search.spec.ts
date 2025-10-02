@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { search } from '../dist';
+import { search, cleanup } from '../dist';
 
 const FIXTURES_DIR = path.join(__dirname, '__fixtures__');
 const STRESS_DIR = path.join(FIXTURES_DIR, 'stress');
@@ -29,7 +29,6 @@ function makeFileContent(callsPerFile: number): string {
     const fnName = `fn${i}`;
     lines.push(`function ${fnName}(){ return ${i}; }`);
   }
-  // Emit calls as separate lines to make counting simple
   for (let i = 0; i < callsPerFile; i++) {
     const fnName = `fn${i}`;
     lines.push(`${fnName}();`);
@@ -37,38 +36,61 @@ function makeFileContent(callsPerFile: number): string {
   return lines.join('\n');
 }
 
-// Uncomment this for stress testing
-describe.skip('search stress test', () => {
-  jest.setTimeout(600000); // up to 10 minutes
-  it('creates 50000 files with 100 CallExpression each and times search', async () => {
-    const NUM_FILES = 50000;
-    const CALLS_PER_FILE = 100;
+const testRunner = async (numberOfFiles: number, callsPerFile: number, interval: number = 10): Promise<void> => {
+  ensureDir(FIXTURES_DIR);
+  rimrafDir(STRESS_DIR);
+  ensureDir(STRESS_DIR);
+  const content = makeFileContent(callsPerFile);
 
-    // Prepare fixtures
-    ensureDir(FIXTURES_DIR);
-    // Recreate stress dir fresh
-    rimrafDir(STRESS_DIR);
-    ensureDir(STRESS_DIR);
-    const content = makeFileContent(CALLS_PER_FILE);
-    // Write files synchronously to avoid EMFILE issues
-    for (let i = 0; i < NUM_FILES; i++) {
-      const f = path.join(STRESS_DIR, `file_${i}.ts`);
-      fs.writeFileSync(f, content, 'utf-8');
-    }
-    const expectedMatches = NUM_FILES * CALLS_PER_FILE;
-    const start = Date.now();
-    let matches = 0;
-    await search(
-      'CallExpression',
-      chunk => {
-        console.log(`Chunk Size: ${chunk.length}`);
-        matches += chunk.length;
-      },
-      { gitignore: true, directories: [STRESS_DIR], interval: 1000 }
-    );
-    const durationMs = Date.now() - start;
-    console.log(`Found ${matches} CallExpression in ${durationMs} ms across ${NUM_FILES} files.`);
-    expect(matches).toBe(expectedMatches);
-    rimrafDir(STRESS_DIR);
+  for (let i = 0; i < numberOfFiles; i++) {
+    const f = path.join(STRESS_DIR, `file_${i}.ts`);
+    fs.writeFileSync(f, content, 'utf-8');
+  }
+
+  const expectedMatches = numberOfFiles * callsPerFile;
+  const start = Date.now();
+  let matches = 0;
+
+  await search(
+    'CallExpression',
+    chunk => {
+      matches += chunk.length;
+    },
+    { gitignore: true, directories: [STRESS_DIR], interval }
+  );
+
+  const durationMs = Date.now() - start;
+  console.log(`Found ${matches} CallExpression in ${durationMs} ms across ${numberOfFiles} files.`);
+  expect(matches).toBe(expectedMatches);
+
+  rimrafDir(STRESS_DIR);
+};
+
+const TEST_CASES = [
+  {
+    name: 'Small stress test (10000 files, 50 calls each)',
+    numberOfFiles: 10000,
+    callsPerFile: 50,
+    skip: false,
+    interval: 10,
+  },
+  {
+    name: 'Large stress test (100 files, 50000 calls each)',
+    numberOfFiles: 100,
+    callsPerFile: 50000,
+    skip: true,
+    interval: 10,
+  },
+];
+
+describe('Search Stress Tests', () => {
+  jest.setTimeout(600000);
+  afterAll(cleanup);
+
+  TEST_CASES.forEach(tc => {
+    const runner = tc.skip ? it.skip : it;
+    runner(tc.name, async () => {
+      await testRunner(tc.numberOfFiles, tc.callsPerFile, tc.interval);
+    });
   });
 });

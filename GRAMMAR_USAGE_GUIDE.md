@@ -35,6 +35,7 @@ TypeName
 ```
 
 **Example:**
+
 ```
 CallExpression
 ```
@@ -48,6 +49,7 @@ TypeName[attribute=value]
 ```
 
 **Example:**
+
 ```
 Identifier[name="foo"]
 ```
@@ -292,11 +294,13 @@ The grammar provides detailed error messages when parsing fails:
 ### Common Errors
 
 1. **Missing quotes around strings:**
+
    ```
    Identifier[name=foo]  // Error: Expected "=" but "f" found
    ```
 
 2. **Invalid attribute syntax:**
+
    ```
    Identifier[name="foo" value="bar"]  // Error: Expected "]" but "v" found
    ```

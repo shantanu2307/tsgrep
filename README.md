@@ -18,6 +18,7 @@ To install tsgrep:
 ```bash
 npm i tsgrep
 ```
+
 ## 🏗️ Architecture
 
 ### High-level Architecture
@@ -150,19 +151,19 @@ classDiagram
         +children: Array
         +value: Any
     }
-    
+
     class SearchResult {
         +file: String
         +line: Number
         +content: String
     }
-    
+
     class SearchOptions {
         +ignore: Array
         +gitignore: Boolean
         +batchSize: Number
     }
-    
+
     QueryNode --> SearchResult
     SearchOptions --> SearchResult
 ```
