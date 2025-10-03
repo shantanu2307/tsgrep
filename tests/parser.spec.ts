@@ -140,10 +140,10 @@ export const TEST_CASES = [
 describe('parser.js', () => {
   afterAll(cleanup);
   const queryCache = getQueryCache();
-  TEST_CASES.map(({ input, expectedOutput }) =>
+  TEST_CASES.forEach(({ input, expectedOutput }) => {
     it(`should create correct query for input:${input}`, async () => {
       const output = queryCache.parseQuery(input);
       expect(output).toEqual(expectedOutput);
-    })
-  );
+    });
+  });
 });

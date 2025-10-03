@@ -20,7 +20,7 @@ function removeTempFile(filePath: string) {
   }
 }
 
-export async function runMatcherTestCase(tc: MatcherTestCase) {
+export async function testRunner(tc: MatcherTestCase) {
   const file = writeTempFile(tc.code);
   try {
     const matches = scanForMatches(file, tc.query);
