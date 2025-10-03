@@ -8,7 +8,7 @@ import { search, SearchResult } from '../../dist';
 // constants
 import { STRESS_DIR } from '../../src/constants';
 
-interface TestRunnerOptions {
+export interface TestRunnerOptions {
   name: string;
   numberOfFiles: number;
   callsPerFile: number;
