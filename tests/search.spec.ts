@@ -61,20 +61,14 @@ const testRunner = async ({
   getExpectedMatches = getDefaultExpectedMatches,
   debugChunk,
 }: TestRunnerOptions): Promise<void> => {
-  ensureDir(FIXTURES_DIR);
-  rimrafDir(STRESS_DIR);
-  ensureDir(STRESS_DIR);
-
   const content = getContent(callsPerFile);
   for (let i = 0; i < numberOfFiles; i++) {
     const f = path.join(STRESS_DIR, `file_${i}.ts`);
     fs.writeFileSync(f, content, 'utf-8');
   }
-
   const expectedMatches = getExpectedMatches(callsPerFile, numberOfFiles);
   const start = Date.now();
   let matches = 0;
-
   await search(
     expression,
     chunk => {
@@ -87,7 +81,6 @@ const testRunner = async ({
   const durationMs = Date.now() - start;
   console.log(`Found ${matches} ${expression} in ${durationMs} ms across ${numberOfFiles} files.`);
   expect(matches).toBe(expectedMatches);
-  rimrafDir(STRESS_DIR);
 };
 
 const TEST_CASES = [
@@ -197,6 +190,15 @@ const TEST_CASES = [
 
 describe('Search Stress Tests', () => {
   jest.setTimeout(600000);
+  beforeAll(() => {
+    ensureDir(FIXTURES_DIR);
+  });
+  beforeEach(() => {
+    ensureDir(STRESS_DIR);
+  });
+  afterEach(() => {
+    rimrafDir(STRESS_DIR);
+  });
   afterAll(cleanup);
   TEST_CASES.forEach(tc => {
     const runner = tc.skip ? it.skip : it;
